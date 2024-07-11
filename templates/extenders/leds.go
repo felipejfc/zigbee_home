@@ -2,7 +2,7 @@ package extenders
 
 import (
 	"fmt"
-	"path/filepath"
+	"path"
 
 	"github.com/ffenix113/zigbee_home/types"
 	"github.com/ffenix113/zigbee_home/types/devicetree"
@@ -25,7 +25,7 @@ func NewLEDs(instances ...types.Pin) generator.Extender {
 }
 
 func (l LED) Template() string {
-	return filepath.Join("peripherals", "leds")
+	return path.Join("peripherals", "leds")
 }
 
 func (l LED) Includes() []string {

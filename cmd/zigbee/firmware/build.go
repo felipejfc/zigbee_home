@@ -51,6 +51,7 @@ func buildFirmware(ctx *cli.Context) error {
 	if workDir == "" {
 		workDir = "."
 	}
+	workDir = filepath.ToSlash(workDir) // This will make sure that workdir uses slashes as path separators even on windows, which will be fine for cmake.
 
 	generator, err := generate.NewGenerator(cfg)
 	if err != nil {

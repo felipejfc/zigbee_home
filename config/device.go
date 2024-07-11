@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -60,11 +61,16 @@ type Board struct {
 func ParseFromFile(configPath string) (*Device, error) {
 	cfg := &Device{
 		General: General{
-			RunEvery:         time.Minute,
-			NCSToolChainBase: "~/ncs",
-			NCSVersion:       "v2.5.0",
-			Manufacturer:     "FFexix113",
-			DeviceName:       "dongle",
+			RunEvery: time.Minute,
+			NCSToolChainBase: func() string {
+				if runtime.GOOS == "windows" {
+					return "${NCS_TOOLCHAIN_BASE}"
+				}
+				return "$NCS_TOOLCHAIN_BASE"
+			}(),
+			NCSVersion:   "v2.6.1",
+			Manufacturer: "FFexix113",
+			DeviceName:   "dongle",
 		},
 	}
 
@@ -94,6 +100,17 @@ func ParseFromReader(defConfig *Device, rdr io.Reader) (*Device, error) {
 	// This may contain environment variables,
 	// so be kind and try to resolve
 	defConfig.General.NCSToolChainBase = resolveStringEnv(defConfig.General.NCSToolChainBase)
+
+	// If the toolchain base is not set, set it to the default value.
+	if defConfig.General.NCSToolChainBase == "" {
+		defConfig.General.NCSToolChainBase = func() string {
+			if runtime.GOOS == "windows" {
+				return "C:\\ncs"
+			}
+			return "~/ncs"
+		}()
+	}
+
 	defConfig.General.ZephyrBase = resolveStringEnv(defConfig.General.ZephyrBase)
 
 	defConfig.PrependCommonClusters()

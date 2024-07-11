@@ -43,8 +43,8 @@ var knownClusterTemplates = map[cluster.ID]string{
 }
 
 var sourceFiles = [][2]string{
-	{filepath.Join("..", "CMakeLists.txt"), "CMakeLists.txt.tpl"},
-	{filepath.Join("..", "Kconfig"), "Kconfig.tpl"},
+	{path.Join("..", "CMakeLists.txt"), "CMakeLists.txt.tpl"},
+	{path.Join("..", "Kconfig"), "Kconfig.tpl"},
 	{"main.c", "main.c.tpl"},
 	{"device.h", "device.h.tpl"},
 	{"clusters.h", "clusters.h.tpl"},
@@ -116,7 +116,7 @@ func NewTemplates(templateFS fs.FS) *Templates {
 		"sum":                 sum,
 		"formatHex":           formatHex,
 		"joinPath": func(strs ...string) string {
-			return filepath.Join(strs...)
+			return path.Join(strs...)
 		},
 	})
 
@@ -127,7 +127,7 @@ func NewTemplates(templateFS fs.FS) *Templates {
 	must(t.parseByDir(templateFS, path.Join("src", "modules", "*", "dts", "bindings", "sensor", "*"), nil))
 	must(t.parseByDir(templateFS, path.Join("src", "modules", "*", "zephyr", "*"), nil))
 
-	t.templates = template.Must(t.templates.ParseFS(templateFS, filepath.Join("src", "*.tpl"), filepath.Join("src", "zigbee", "*.tpl")))
+	t.templates = template.Must(t.templates.ParseFS(templateFS, path.Join("src", "*.tpl"), path.Join("src", "zigbee", "*.tpl")))
 
 	return t
 }
@@ -145,7 +145,7 @@ func (t *Templates) parseByDir(tplFS fs.FS, pattern string, validateTpl func(t *
 		}
 		defer openTpl.Close()
 
-		newTpl := templateFromPath(&t.templateTree, t.templates, strings.TrimPrefix(tplFile, "src"+string(os.PathSeparator)))
+		newTpl := templateFromPath(&t.templateTree, t.templates, strings.TrimPrefix(tplFile, "src"+"/"))
 
 		tplText, err := io.ReadAll(openTpl)
 		if err != nil {
@@ -169,7 +169,7 @@ func (t *Templates) parseByDir(tplFS fs.FS, pattern string, validateTpl func(t *
 func templateFromPath(root *templateTree, baseTpl *template.Template, tplPath string) *template.Template {
 	const templateExtention = ".tpl"
 
-	pathParts := strings.Split(tplPath, string(os.PathSeparator))
+	pathParts := strings.Split(tplPath, "/") // because we always need to use "/" when using embed.FS
 
 	tree := root
 	for _, pathPart := range pathParts[:len(pathParts)-1] {
@@ -291,7 +291,7 @@ func writeTemplate(template *template.Template, filePath string, ctx any) error 
 		return fmt.Errorf("template is nil for path %q", filePath)
 	}
 
-	dirName := path.Dir(filePath)
+	dirName := filepath.Dir(filePath)
 	if err := os.MkdirAll(dirName, 0o755); err != nil {
 		return fmt.Errorf("create directory %q: %w", dirName, err)
 	}
@@ -312,7 +312,7 @@ func writeTemplate(template *template.Template, filePath string, ctx any) error 
 
 func (t *Templates) findExtendedTemplate(templateName string) *template.Template {
 
-	nameParts := append([]string{"extenders"}, strings.Split(templateName, string(os.PathSeparator))...)
+	nameParts := append([]string{"extenders"}, strings.Split(templateName, "/")...) // because we always need to use "/" when using embed.FS
 
 	tree := &t.templateTree
 	for _, namePart := range nameParts {

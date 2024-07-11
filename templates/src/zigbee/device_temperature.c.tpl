@@ -26,6 +26,7 @@ typedef void * zb_voidp_t;
     ZB_ZCL_ATTR_DEVICE_TEMP_CONFIG_CURRENT_TEMPERATURE_ID, \
     ZB_ZCL_ATTR_TYPE_U16, \
     ZB_ZCL_ATTR_ACCESS_READ_ONLY, \
+    (ZB_UINT16_MAX), \
     (zb_voidp_t) data_ptr \
   }
 

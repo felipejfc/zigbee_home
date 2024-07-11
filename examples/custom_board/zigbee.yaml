@@ -1,0 +1,20 @@
+general:
+  # Because this board is not supported by zephyr yet, we need to provide its whole definition by ourselves, this can be found in the "boards" folder.
+  # The details on the capability of supporting custom boards can be found at: https://docs.zephyrproject.org/latest/hardware/porting/board_porting.html
+  board: nice_nano_v2
+
+board:
+  bootloader: adafruit_nrf52_sd140_v6
+  i2c:
+    - id: i2c0
+
+  factory_reset_button: btn1
+
+  buttons:
+    - id: btn1
+      pin: 1.15
+
+sensors:
+  - type: scd4x
+    i2c:
+      id: i2c0

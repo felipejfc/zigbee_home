@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 
@@ -161,11 +161,11 @@ func selectVersion(requested string, available []string) string {
 func constructPaths(ncsBase, version, bundleID string) NCSLocation {
 	return NCSLocation{
 		Version: version,
-		NCS:     path.Join(ncsBase, "toolchains", bundleID),
-		Zephyr:  path.Join(ncsBase, version, "zephyr"),
+		NCS:     filepath.Join(ncsBase, "toolchains", bundleID),
+		Zephyr:  filepath.Join(ncsBase, version, "zephyr"),
 	}
 }
 
 func toolchainConfigPath(ncsBase string) string {
-	return path.Join(ncsBase, "toolchains", "toolchains.json")
+	return filepath.Join(ncsBase, "toolchains", "toolchains.json")
 }

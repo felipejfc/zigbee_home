@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -99,17 +100,47 @@ func WithEnvironment(envVals ...string) CmdOpt {
 }
 
 func extendEnv(ncsToolchainPath string, zephyrPath string) []string {
-	// All of this paths are based on NRF Connect SDK v2.5.1 and might change in the future.
+	envFilePath := filepath.Join(ncsToolchainPath, "environment.json")
+	envFile, err := os.Open(envFilePath)
+	if err != nil {
+		log.Printf("error opening environment.json file at %q: %v", envFilePath, err)
+		return nil
+	}
+	defer envFile.Close()
 
-	ncsCombinedPath := generateEnvArray(ncsToolchainPath, []string{
-		"/usr/bin",
-		"/usr/local/bin",
-		"/opt/bin",
-		"/opt/nanopb/generator-bin",
-		"/opt/zephyr-sdk/aarch64-zephyr-elf/bin",
-		"/opt/zephyr-sdk/x86_64-zephyr-elf/bin",
-		"/opt/zephyr-sdk/arm-zephyr-eabi/bin",
-	})
+	var envConfig struct {
+		EnvVars []struct {
+			Type                   string   `json:"type"`
+			Key                    string   `json:"key"`
+			Values                 []string `json:"values"`
+			Value                  string   `json:"value"`
+			ExistingValueTreatment string   `json:"existing_value_treatment"`
+		} `json:"env_vars"`
+	}
+
+	if err := json.NewDecoder(envFile).Decode(&envConfig); err != nil {
+		log.Printf("error decoding environment.json file: %v", err)
+		return nil
+	}
+
+	envVars := make(map[string]string)
+	for _, envVar := range envConfig.EnvVars {
+		switch envVar.Type {
+		case "relative_paths":
+			paths := generateEnvArray(ncsToolchainPath, envVar.Values)
+			if envVar.ExistingValueTreatment == "prepend_to" {
+				existingValue := os.Getenv(envVar.Key)
+				if existingValue != "" {
+					paths += string(os.PathListSeparator) + existingValue
+				}
+			}
+			envVars[envVar.Key] = paths
+		case "string":
+			envVars[envVar.Key] = envVar.Value
+		}
+	}
+
+	ncsCombinedPath := envVars["PATH"]
 
 	envPath := os.Getenv("PATH")
 	combinedPath := ncsCombinedPath
@@ -135,7 +166,7 @@ func extendEnv(ncsToolchainPath string, zephyrPath string) []string {
 
 func generateEnvArray(prefix string, vals []string) string {
 	for i := range vals {
-		vals[i] = path.Join(prefix, vals[i])
+		vals[i] = filepath.Join(prefix, vals[i])
 	}
 
 	return strings.Join(vals, string(filepath.ListSeparator))

@@ -101,16 +101,6 @@ func ParseFromReader(defConfig *Device, rdr io.Reader) (*Device, error) {
 	// so be kind and try to resolve
 	defConfig.General.NCSToolChainBase = resolveStringEnv(defConfig.General.NCSToolChainBase)
 
-	// If the toolchain base is not set, set it to the default value.
-	if defConfig.General.NCSToolChainBase == "" {
-		defConfig.General.NCSToolChainBase = func() string {
-			if runtime.GOOS == "windows" {
-				return "C:\\ncs"
-			}
-			return "~/ncs"
-		}()
-	}
-
 	defConfig.General.ZephyrBase = resolveStringEnv(defConfig.General.ZephyrBase)
 
 	defConfig.PrependCommonClusters()

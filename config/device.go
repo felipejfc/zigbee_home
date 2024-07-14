@@ -64,9 +64,9 @@ func ParseFromFile(configPath string) (*Device, error) {
 			RunEvery: time.Minute,
 			NCSToolChainBase: func() string {
 				if runtime.GOOS == "windows" {
-					return "${NCS_TOOLCHAIN_BASE}"
+					return "C:\\ncs"
 				}
-				return "$NCS_TOOLCHAIN_BASE"
+				return "~/ncs"
 			}(),
 			NCSVersion:   "v2.6.1",
 			Manufacturer: "FFexix113",
